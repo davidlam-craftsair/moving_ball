@@ -1,67 +1,114 @@
-
 var isDebug = true;
 
-var velocityX = Math.random() * 100;
-var velocityY = Math.random() * 100;
+var velocityX = Math.random() * 100 * getRandomSign();
+var velocityY = Math.random() * 100 * getRandomSign();
+
+function getRandomSign() {
+  if (Math.random() > 0.5) {
+    return 1;
+  }
+  else {
+    return -1;
+  }
+}
 var ball = document.getElementById('ball');
+
+var ballBoundaryRightPos;
+var ballBoundaryLeftPos;
+var ballBoundaryTopPos;
+var ballBoundaryBottomPos;
+
 var generateRandomPos = function(minVal, maxVal) {
   var length = maxVal - minVal;
   return minVal + Math.Round(Math.random * length);
 }
-var positionX = parseInt(ball.style.left) + parseInt(ball.style.width) / 2;
-var positionY = parseInt(ball.style.top) + parseInt(ball.style.height) / 2;
 
-var ballBoundaryRightPos = positionX + ballWidth;
-var ballBoundaryLeftPos = positionX - ballWidth * 2;
+function getInitialPositionX() {
+  canvasWidth = parseInt(window.innerWidth);
+  return canvasWidth / 2;
+}
 
-var ballBoundaryTopPos = positionY - ballHeight * 2;
-var ballBoundaryBottomPos = positionY + ballHeight;
+function getInitialPositionY() {
+  canvasHeight = parseInt(window.innerHeight);
+  return canvasHeight / 2;
+}
+
+var positionX = getInitialPositionY();
+var positionY = getInitialPositionY();
+
+var ballWidth = parseFloat(ball.style.width);
+var ballHeight = parseFloat(ball.style.height);
+
+reportBallStatus();
 
 // YOUR CODE 
 // ----------------
-var reverseDirectionX = () => {
+
+function reverseVelocityX() {
   velocityX *= -1;
 }
-var reverseDirectionY = () => {
+function reverseVelocityY() {
   velocityY *= -1;
 }
-var ballWidth = parseFloat(ball.style.width);
-var ballHeight = parseFloat(ball.style.height);
-function onBallTouchEdgeBallBounceBack() {
-  var rebounceVelocityX = -velocityX;
-  var rebounceVelocityY = -velocityY;
-  velocityX = rebounceVelocityX;
-  velocityY = rebounceVelocityY;
-  if (isDebug) {
-    console.log('The ball should be bounced back');
+function getCanvasRightEdgeX() {
+  return parseInt(window.innerWidth);
+}
+function getCanvasTopEdgeY() {
+  return 0;
+}
+function getCanvasBottomEdgeY() {
+  return parseInt(window.innerHeight);
+}
+function getCanvasLeftEdgeX() {
+  return 0;
+}
+function getBallBoundaryRightPos() {
+  return positionX + getBallWidth();
+}
+function getBallWidth() {
+  return parseInt(ball.style.width);
+}
+function getBallHeight() {
+  return parseInt(ball.style.height);
+}
+function getBallBoundaryLeftPos() {
+  return positionX - getBallWidth();
+}
+function getBallBoundaryRightPos() {
+  return positionX + getBallWidth();
+}
+function getBallBoundaryTopPos() {
+  return positionY - getBallHeight();
+}
+function getBallBoundaryBottomPos() {
+  return positionY + getBallHeight();
+}
+function respondToBallTouchVerticalEdge() {
+  if (getBallBoundaryLeftPos() <= getCanvasLeftEdgeX() || getBallBoundaryRightPos() >= getCanvasRightEdgeX()) {
+    reverseVelocityX();
   }
 }
-function checkIfBallTouchEdge() {
-  let canvasWidth = parseInt(window.innerWidth);
-  let canvasHeight = parseInt(window.innerHeight);
-  return ((ballBoundaryRightPos >= canvasWidth || ballBoundaryLeftPos <= 0)
-    || (ballBoundaryLeftPos <= canvasWidth || ballBoundaryRightPos >= 0)) || (ballBoundaryTopPos <= 0 || ballBoundaryBottomPos >= canvasHeight));
+function respondToBallTouchHorizontalEdge() {
+  if (getBallBoundaryTopPos() <= getCanvasTopEdgeY() || getBallBoundaryBottomPos() >= getCanvasBottomEdgeY()) {
+    reverseVelocityY();
+  }
 }
+
 function reportBallStatus() {
 
   console.log("Ball status as follows:");
-  console.log("\tPosX = " + positionX);
-  console.log("\tPosY = " + positionY);
-  console.log("\tBoundaryRightPos is " + ballBoundaryRightPos);
-  console.log("\tBoundaryLeftPos is " + ballBoundaryLeftPos);
-  console.log("\tBoundaryTopPos is " + ballBoundaryTopPos);
-  console.log("\tBoundaryBottomPos is " + ballBoundaryBottomPos);
+  console.log("\tPosX = " + positionX.toFixed(2));
+  console.log("\tPosY = " + positionY.toFixed(2));
+  console.log("\tBoundaryRightPos is " + getBallBoundaryRightPos().toFixed(2));
+  console.log("\tBoundaryLeftPos is " + getBallBoundaryLeftPos().toFixed(2));
+  console.log("\tBoundaryTopPos is " + getBallBoundaryTopPos().toFixed(2));
+  console.log("\tBoundaryBottomPos is " + getBallBoundaryBottomPos().toFixed(2));
 
-  console.log("\tvelocityX = " + velocityX);
-  console.log("\tvelocityY = " + velocityY);
+  console.log(`\tvelocityX = ${velocityX.toFixed(2)}`);
+  console.log("\tvelocityY = " + velocityY.toFixed(2));
 }
 var move2d = () => {
   // TODO we want the ball to move within the screen
-
-  // edge detection 
-  if (checkIfBallTouchEdge()) {
-    onBallTouchEdgeBallBounceBack(velocityX, velocityY);
-  }
 
   positionX = positionX + velocityX;
   positionY = positionY + velocityY;
@@ -70,9 +117,24 @@ var move2d = () => {
   ball.style.left = positionX;
   ball.style.top = positionY;
 
-  reportBallStatus();
+  // edge detection 
+  respondToBallTouchVerticalEdge();
+  respondToBallTouchHorizontalEdge();
 
+  reportBallStatus();
 }
 
+function resetPos() {
+  ball.style.left = 0 + 'px';
+  ball.style.right = 0 + 'px';
+}
 
-console.log(setInterval(move2d, 1000));
+function resetVelocity() {
+  velocityX = 0;
+  velocityY = 0;
+}
+
+ball.style.left = positionX;
+ball.style.top = positionY;
+ball.style.visibility = 'visible';
+console.log(setInterval(move2d, 100));
